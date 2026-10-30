@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090f1b">
+  <meta name="description" content="SwarmX local security operations dashboard for evidence-grounded event triage and incident analysis.">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>SwarmX SOC Dashboard | Local Threat Triage</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg', v='1') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css', v='2') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+  <script src="{{ url_for('static', filename='js/app.js', v='4') }}" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="#overview" data-view="overview" aria-label="SwarmX home">
+      <span class="brand-mark"><span></span><span></span><span></span></span>
+      <span>SWARM<span class="brand-x">X</span><small>THREAT OPERATIONS</small></span>
+    </a>
+    <div class="workspace-label">WORKSPACE</div>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="#overview" class="nav-link active" data-view="overview" aria-label="Overview" aria-current="page"><span class="nav-icon" aria-hidden="true">◫</span> Overview <span class="nav-pip" aria-hidden="true"></span></a>
+      <a href="#incidents" class="nav-link" data-view="incidents" aria-label="Incidents"><span class="nav-icon" aria-hidden="true">◈</span> Incidents <span class="nav-count" id="nav-incident-count">0</span></a>
+      <a href="#events" class="nav-link" data-view="events" aria-label="Event stream"><span class="nav-icon" aria-hidden="true">⌁</span> Event stream</a>
+      <a href="#alerts" class="nav-link" data-view="alerts" aria-label="Alerts"><span class="nav-icon" aria-hidden="true">⚑</span> Alerts</a>
+      <a href="#agents" class="nav-link" data-view="agents" aria-label="AI Agents"><span class="nav-icon" aria-hidden="true">✳</span> AI Agents</a>
+      <a href="#network" class="nav-link" data-view="network" aria-label="Network map"><span class="nav-icon" aria-hidden="true">⌘</span> Network map</a>
+      <a href="#reports" class="nav-link" data-view="reports" aria-label="Reports"><span class="nav-icon" aria-hidden="true">▤</span> Reports</a>
+      <a href="#settings" class="nav-link" data-view="settings" aria-label="Settings"><span class="nav-icon" aria-hidden="true">⚙</span> Settings</a>
+    </nav>
+    <div class="sidebar-spacer"></div>
+    <div class="agent-card">
+      <div class="agent-card-head"><span class="pulse-dot"></span><span>ANALYSIS FLEET</span><span class="fleet-status">READY</span></div>
+      <div class="agent-visual"><div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><div class="orbit-core">✳</div><i class="orbit-dot dot-a"></i><i class="orbit-dot dot-b"></i><i class="orbit-dot dot-c"></i></div>
+      <div class="agent-count"><strong>03</strong><span>local agents active</span></div>
+      <div class="agent-caption">Evidence-grounded · no external AI</div>
+    </div>
+    <div class="sidebar-foot"><span class="shield-icon">⬡</span><span>LOCAL ENVIRONMENT<small>SQLite · on-device analysis</small></span><span class="green-dot"></span></div>
+  </aside>
+
+  <main class="main-shell" id="main-content" tabindex="-1">
+    <header class="topbar">
+      <button class="icon-button mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar">☰</button>
+      <div class="breadcrumbs"><span>SWARMX</span><b>/</b><strong id="current-section">Overview</strong></div>
+      <div class="top-actions">
+        <div class="connection" id="connection-status"><span class="green-dot"></span> SYSTEM OPERATIONAL</div>
+        <button class="icon-button" id="refresh-button" title="Refresh dashboard" aria-label="Refresh dashboard">↻</button>
+        <div class="avatar" title="Local analyst">SA</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <section class="view-section active" id="view-overview">
+        <div class="page-heading">
+          <div><div class="eyebrow"><span class="eyebrow-line"></span> SECURITY OPERATIONS CENTER</div><h1>Threat overview<span class="heading-period">.</span></h1><p class="page-subtitle">A live view of ingested telemetry and explainable detections.</p></div>
+          <div class="heading-actions"><span class="updated-label" id="last-updated">WAITING FOR DATA</span><button class="button button-primary" id="ingest-open"><span>＋</span> Ingest events</button></div>
+        </div>
+        <div class="metric-grid">
+          <article class="metric-card"><div class="metric-top"><span class="metric-label">EVENTS INGESTED</span><span class="metric-icon cyan">⌁</span></div><div class="metric-value" id="metric-events">0</div><div class="metric-foot"><span class="metric-note">Normalized telemetry</span><span class="metric-trend cyan-text">LIVE</span></div><div class="metric-decoration deco-cyan"></div></article>
+          <article class="metric-card"><div class="metric-top"><span class="metric-label">DETECTION ALERTS</span><span class="metric-icon purple">⌑</span></div><div class="metric-value" id="metric-alerts">0</div><div class="metric-foot"><span class="metric-note">Rule-matched signals</span><span class="metric-trend purple-text">RULES</span></div><div class="metric-decoration deco-purple"></div></article>
+          <article class="metric-card"><div class="metric-top"><span class="metric-label">ACTIVE INCIDENTS</span><span class="metric-icon orange">◈</span></div><div class="metric-value" id="metric-open">0</div><div class="metric-foot"><span class="metric-note">New through contained</span><span class="metric-trend orange-text">TRACKED</span></div><div class="metric-decoration deco-orange"></div></article>
+          <article class="metric-card"><div class="metric-top"><span class="metric-label">CRITICAL SEVERITY</span><span class="metric-icon red">⬡</span></div><div class="metric-value" id="metric-critical">0</div><div class="metric-foot"><span class="metric-note">Active critical incidents</span><span class="metric-trend red-text">PRIORITY</span></div><div class="metric-decoration deco-red"></div></article>
+        </div>
+        <div class="secondary-metrics">
+          <div><span>PROCESSED</span><strong id="metric-processed">0</strong></div>
+          <div><span>INVESTIGATING</span><strong id="metric-investigating">0</strong></div>
+          <div><span>RESOLVED</span><strong id="metric-resolved">0</strong></div>
+          <div><span>ACTIVE RULES</span><strong id="metric-rules">0</strong></div>
+          <div><span>ANALYSES COMPLETED</span><strong id="metric-jobs">0</strong></div>
+          <div><span>IMPORT FAILURES</span><strong id="metric-failures">0</strong></div>
+        </div>
+
+        <div class="dashboard-grid">
+          <article class="panel activity-panel">
+            <div class="panel-heading"><div><span class="panel-kicker">TELEMETRY</span><h2>Event activity</h2></div><span class="panel-context"><span class="green-dot"></span> LAST 7 DAYS</span></div>
+            <div class="chart-wrap"><canvas id="activity-chart" aria-label="Events ingested per day"></canvas><div id="activity-empty" class="chart-empty">Ingest an event file to begin visualizing activity.</div></div>
+          </article>
+          <article class="panel severity-panel">
+            <div class="panel-heading"><div><span class="panel-kicker">TRIAGE</span><h2>Severity distribution</h2></div><button class="text-button" data-navigate="incidents">VIEW ALL <span>↗</span></button></div>
+            <div class="severity-content"><div class="donut-wrap"><canvas id="severity-chart" aria-label="Incidents by severity"></canvas><div id="severity-empty" class="chart-empty">Chart library unavailable; counts remain listed.</div><div class="donut-center"><strong id="severity-total">0</strong><span>INCIDENTS</span></div></div><div class="severity-legend" id="severity-legend"></div></div>
+          </article>
+        </div>
+
+        <div class="lower-grid">
+          <article class="panel incident-panel">
+            <div class="panel-heading"><div><span class="panel-kicker">INVESTIGATION QUEUE</span><h2>Recent incidents</h2></div><button class="text-button" data-navigate="incidents">ALL INCIDENTS <span>↗</span></button></div>
+            <div class="table-scroll"><table><thead><tr><th>INCIDENT</th><th>SEVERITY</th><th>STATUS</th><th>SOURCE</th><th>ALERTS</th></tr></thead><tbody id="recent-incidents"></tbody></table><div class="table-empty" id="recent-empty">No incidents yet. Load a demo scenario or ingest event data.</div></div>
+          </article>
+          <article class="panel quick-panel">
+            <div class="panel-heading"><div><span class="panel-kicker">DEMO LAB</span><h2>Generate a scenario</h2></div><span class="demo-tag">SYNTHETIC</span></div>
+            <p class="quick-description">Populate the live workspace with a safe, synthetic detection scenario.</p>
+            <label class="select-label" for="scenario-select">SCENARIO</label>
+            <select id="scenario-select"><option value="brute_force">Brute-force login pattern</option><option value="suspicious_login">Suspicious login sequence</option><option value="reconnaissance">Network reconnaissance</option><option value="denied_traffic">Repeated denied traffic</option><option value="multi_stage">Multi-stage incident</option></select>
+            <button class="button button-secondary full-button" id="load-demo"><span>▷</span> Run demo scenario</button>
+            <div class="quick-foot"><span class="pulse-dot"></span> Synthetic records only · no live traffic</div>
+          </article>
+        </div>
+        <div class="lower-grid insight-grid">
+          <article class="panel quick-panel"><div class="panel-heading"><div><span class="panel-kicker">LATEST SIGNALS</span><h2>Recent alerts</h2></div><button class="text-button" data-navigate="alerts">OPEN QUEUE ↗</button></div><div id="recent-alert-list" class="compact-list"></div></article>
+          <article class="panel quick-panel"><div class="panel-heading"><div><span class="panel-kicker">SOURCE CONTEXT</span><h2>Top observed sources</h2></div></div><div id="top-source-list" class="compact-list"></div><div class="detail-section-title">FREQUENT RULES</div><div id="top-rule-list" class="compact-list"></div></article>
+          <article class="panel quick-panel"><div class="panel-heading"><div><span class="panel-kicker">OPERATIONS</span><h2>Case status</h2></div></div><div id="status-distribution" class="compact-list"></div><div class="detail-section-title">LATEST ANALYST ACTIONS</div><div id="recent-action-list" class="compact-list"></div><div class="detail-section-title">AGENT EXECUTION</div><div id="dashboard-agent-list" class="compact-list"></div></article>
+        </div>
+      </section>
+
+      <section class="view-section" id="view-incidents">
+        <div class="page-heading compact-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> CASE MANAGEMENT</div><h1>Incident queue<span class="heading-period">.</span></h1><p class="page-subtitle">Review correlated detections, track case status, and add analyst notes.</p></div><button class="button button-primary" id="incident-export">Export events</button></div>
+        <article class="panel full-panel"><div class="panel-heading"><div><span class="panel-kicker">ALL CASES</span><h2>Incidents</h2></div><div class="table-tools"><input type="search" id="incident-search" placeholder="Filter by title or source…" aria-label="Filter incidents"><select id="status-filter" aria-label="Filter by status"><option value="">All statuses</option><option>New</option><option>Open</option><option>Investigating</option><option>Contained</option><option>Resolved</option><option>Closed</option></select><select id="incident-severity-filter" aria-label="Filter incidents by severity"><option value="">All severity</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></div></div><div class="table-scroll"><table><thead><tr><th>INCIDENT</th><th>SEVERITY</th><th>STATUS</th><th>SOURCE IP</th><th>CREATED</th><th>ALERTS</th><th></th></tr></thead><tbody id="incident-rows"></tbody></table><div class="table-empty" id="incidents-empty">No incidents match this view.</div></div><div class="pagination"><span id="incident-page-info">0 incidents</span><button class="button button-secondary" id="incident-prev">← Previous</button><button class="button button-secondary" id="incident-next">Next →</button></div></article>
+      </section>
+
+      <section class="view-section" id="view-events">
+        <div class="page-heading compact-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> NORMALIZED TELEMETRY</div><h1>Event stream<span class="heading-period">.</span></h1><p class="page-subtitle">Browse the most recent stored events and their linked detection signals.</p></div><div class="heading-actions"><button class="button button-secondary" id="events-export">↓ Export CSV</button><button class="button button-primary" id="events-ingest">＋ Ingest events</button></div></div>
+        <article class="panel full-panel"><div class="panel-heading"><div><span class="panel-kicker">RECENT RECORDS</span><h2>Events</h2></div><div class="table-tools"><input type="search" id="event-search" placeholder="Search IP, type, user…" aria-label="Search events"><select id="event-type-filter" aria-label="Filter by event type"><option value="">All types</option></select><select id="event-severity-filter" aria-label="Filter by related alert severity"><option value="">Any severity</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></div></div><div class="table-scroll"><table><thead><tr><th>TIME</th><th>SOURCE</th><th>DESTINATION</th><th>EVENT TYPE</th><th>USER</th><th>ACTION</th><th>ALERTS</th></tr></thead><tbody id="event-rows"></tbody></table><div class="table-empty" id="events-empty">No events ingested yet.</div></div><div class="pagination"><span id="event-page-info">0 events</span><button class="button button-secondary" id="event-prev">← Previous</button><button class="button button-secondary" id="event-next">Next →</button></div></article>
+      </section>
+
+      <section class="view-section" id="view-alerts">
+        <div class="page-heading compact-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> DETECTION WORKFLOW</div><h1>Security alerts<span class="heading-period">.</span></h1><p class="page-subtitle">Inspect rule matches, evidence, workflow status, and linked incidents.</p></div></div>
+        <article class="panel full-panel"><div class="panel-heading"><div><span class="panel-kicker">ALERT QUEUE</span><h2>Detection signals</h2></div><div class="table-tools"><input type="search" id="alert-search" placeholder="Search rule, title, source…" aria-label="Filter alerts"><select id="alert-severity-filter" aria-label="Filter alerts by severity"><option value="">All severity</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select><select id="alert-status-filter" aria-label="Filter alerts by status"><option value="">All states</option><option>New</option><option>Acknowledged</option><option>Investigating</option><option>Resolved</option></select></div></div><div class="table-scroll"><table><thead><tr><th>ALERT</th><th>SEVERITY</th><th>RULE</th><th>SOURCE</th><th>TIME</th><th>STATUS</th><th>INCIDENT</th><th>ACTION</th></tr></thead><tbody id="alert-rows"></tbody></table><div class="table-empty" id="alerts-empty">No alerts match this view.</div></div><div class="pagination"><span id="alert-page-info">0 alerts</span><button class="button button-secondary" id="alert-prev">← Previous</button><button class="button button-secondary" id="alert-next">Next →</button></div></article>
+      </section>
+
+      <section class="view-section" id="view-agents">
+        <div class="page-heading compact-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> LOCAL ANALYSIS FLEET</div><h1>AI agents<span class="heading-period">.</span></h1><p class="page-subtitle">Deterministic specialist modules report only on stored evidence; no external model is configured.</p></div><div class="heading-actions"><select id="agent-incident-select" aria-label="Select incident for analysis"></select><button class="button button-primary" id="run-fleet-analysis">✳ Run analysis</button><button class="button button-secondary" id="agents-refresh">↻ Refresh</button></div></div>
+        <div class="agent-grid" id="agent-grid"></div>
+        <article class="panel full-panel agent-run-panel"><div class="panel-heading"><div><span class="panel-kicker">EXECUTION HISTORY</span><h2>Analysis jobs</h2></div><span class="mono">Actual persisted agent runs</span></div><div id="agent-run-list" class="run-list"></div></article>
+      </section>
+
+      <section class="view-section" id="view-network">
+        <div class="page-heading compact-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> OBSERVED CONNECTIONS</div><h1>Network map<span class="heading-period">.</span></h1><p class="page-subtitle">A relationship view derived only from stored source and destination event fields.</p></div><span class="panel-context"><span class="green-dot"></span> EVENT-DERIVED</span></div>
+        <article class="panel network-panel"><div class="network-legend"><span><i class="legend-source"></i> Source</span><span><i class="legend-destination"></i> Destination</span><span class="network-hint">Select a node to inspect its address · drag to pan · wheel to zoom</span><select id="network-severity" aria-label="Filter network by alert severity"><option value="">All severity</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select><select id="network-incident" aria-label="Filter network by incident"><option value="">All incidents</option></select><select id="network-time-range" aria-label="Filter by time range"><option value="">All time</option><option value="1">Last hour</option><option value="24">Last 24 hours</option><option value="168">Last 7 days</option></select><button class="text-button" id="network-reset">RESET VIEW</button></div><div class="network-canvas-wrap"><canvas id="network-canvas" role="img" aria-label="Observed source and destination network relationships"></canvas><div class="network-empty" id="network-empty">No network relationships recorded yet.<br><small>Ingest events with source and destination IP addresses.</small></div></div><div class="network-footer"><span id="network-stats">0 hosts · 0 observed relationships</span><span>Connections and counts are based on ingested events</span></div><div class="relationship-list" id="relationship-list" aria-label="Textual relationship list"></div></article>
+      </section>
+
+      <section class="view-section" id="view-reports">
+        <div class="page-heading compact-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> INVESTIGATION OUTPUT</div><h1>Reports<span class="heading-period">.</span></h1><p class="page-subtitle">Generate evidence-linked incident summaries for review, export, or printing.</p></div></div>
+        <article class="panel full-panel"><div class="panel-heading"><div><span class="panel-kicker">GENERATE REPORT</span><h2>Incident report</h2></div></div><div class="report-create"><label>INCIDENT<select id="report-incident-select"></select></label><button class="button button-primary" id="generate-report">Generate report</button><span id="report-message" class="mono"></span></div><div id="report-list" class="report-list"></div><div class="table-empty" id="reports-empty">No reports generated yet.</div></article>
+      </section>
+
+      <section class="view-section" id="view-settings">
+        <div class="page-heading compact-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> LOCAL CONFIGURATION</div><h1>Settings<span class="heading-period">.</span></h1><p class="page-subtitle">Persisted settings for this local workspace. Secrets and database paths are not exposed.</p></div></div>
+        <div class="settings-grid"><article class="panel settings-card"><div class="panel-heading"><div><span class="panel-kicker">APPLICATION</span><h2>Workspace settings</h2></div></div><div id="settings-fields"></div><button class="button button-primary" id="save-settings">Save settings</button></article><article class="panel settings-card"><div class="panel-heading"><div><span class="panel-kicker">DETECTION</span><h2>Enabled rules</h2></div></div><div id="rule-settings"></div><button class="button button-secondary" id="save-rules">Save rule configuration</button></article><article class="panel settings-card"><div class="panel-heading"><div><span class="panel-kicker">DATA MANAGEMENT</span><h2>Demo records</h2></div></div><p class="quick-description">Synthetic records are marked and can be removed without deleting imported event data.</p><button class="button button-secondary" id="reset-demo">Remove synthetic demo data</button></article></div>
+      </section>
+    </div>
+  </main>
+
+  <div class="modal-backdrop" id="ingest-modal" aria-hidden="true">
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="ingest-title">
+      <button class="modal-close" data-close-modal aria-label="Close dialog">×</button><div class="eyebrow"><span class="eyebrow-line"></span> TELEMETRY INGESTION</div><h2 id="ingest-title">Bring in event data</h2><p>Upload a CSV or JSON file. Events are validated, normalized, and stored locally.</p>
+      <form id="ingest-form"><label class="upload-zone" for="event-file" id="upload-zone"><span class="upload-icon">⇧</span><strong id="file-name">Choose or drop a CSV, JSON, or JSONL file</strong><small>Maximum file size: 5 MB</small><input type="file" id="event-file" name="file" accept=".csv,.json,.jsonl,.ndjson,application/json,text/csv" required></label><progress id="upload-progress" max="100" value="0" hidden></progress><div id="ingest-message" class="form-message" role="status"></div><div class="modal-actions"><button type="button" class="button button-secondary" data-close-modal>Cancel</button><button type="submit" class="button button-primary" id="ingest-submit">Validate &amp; ingest</button></div></form>
+      <div class="format-hint">Required fields: source IP and event type. Common aliases are supported.</div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="detail-modal" aria-hidden="true">
+    <section class="modal-card detail-card" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+      <button class="modal-close" data-close-modal aria-label="Close dialog">×</button><div id="detail-content"></div>
+    </section>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
